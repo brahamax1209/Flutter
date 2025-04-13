@@ -19,7 +19,7 @@ Une application Flutter simple permettant d'afficher des notifications locales s
 ## 🛠️ Installation
 1. Clone ce repo :
    ```bash
-   git clone https://github.com/ton_utilisateur/flutter_notifications_demo.git
+   git clone https://github.com/brahamax1209/flutter_notifications_demo.git
    cd flutter_notifications_demo
 Installe les dépendances :
 flutter pub get
