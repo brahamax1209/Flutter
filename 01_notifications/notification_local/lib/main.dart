@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'padded_button.dart';
 import 'plugin.dart';
@@ -9,23 +8,13 @@ import 'plugin.dart';
 final StreamController<NotificationResponse> selectNotificationStream =
 StreamController<NotificationResponse>.broadcast();
 
-const MethodChannel platform =
-MethodChannel('dexterx.dev/flutter_local_notifications_example');
-
-const String portName = 'notification_send_port';
-
 String? selectedNotificationPayload;
-
-const String urlLaunchActionId = 'id_1';
-const String navigationActionId = 'id_3';
-
 int _id = 0;
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  const initializationSettings = InitializationSettings(
+  const paramInit = InitializationSettings(
     android: AndroidInitializationSettings('app_icon'),
     iOS: DarwinInitializationSettings(
       requestAlertPermission: false,
@@ -35,7 +24,7 @@ Future<void> main() async {
   );
 
   await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
+    paramInit,
     onDidReceiveNotificationResponse: selectNotificationStream.add,
   );
 
@@ -72,16 +61,15 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-
   @override
   void initState() {
     super.initState();
-    _isAndroidPermissionGranted();
-    _requestPermissions();
-    _configureSelectNotificationSubject();
+    _verifierPermissionAndroid();
+    _demanderPermissions();
+    _ecouterNotification();
   }
 
-  Future<void> _isAndroidPermissionGranted() async {
+  Future<void> _verifierPermissionAndroid() async {
     if (Platform.isAndroid) {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
@@ -91,7 +79,7 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _requestPermissions() async {
+  Future<void> _demanderPermissions() async {
     if (Platform.isIOS) {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
@@ -105,11 +93,11 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  void _configureSelectNotificationSubject() {
-    selectNotificationStream.stream.listen(_handleNotificationResponse);
+  void _ecouterNotification() {
+    selectNotificationStream.stream.listen(_gererNotification);
   }
 
-  void _handleNotificationResponse(NotificationResponse? response) {
+  void _gererNotification(NotificationResponse? response) {
     if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -126,75 +114,58 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Local Notification')),
+    appBar: AppBar(title: const Text('Notification Locale')),
     body: SingleChildScrollView(
       padding: const EdgeInsets.all(8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Tap on a notification when it appears to trigger navigation',
-          ),
-          _InfoValueString(
-            title: 'Did notification launch app?',
-            value: widget.didNotificationLaunchApp,
-          ),
-          if (widget.didNotificationLaunchApp)
-            ..._buildLaunchDetails(),
           PaddedElevatedButton(
-            buttonText: 'Show plain notification with payload',
-            onPressed: () => _showNotification(title: 'plain title', body: 'plain body'),
+            buttonText: 'Afficher une notification avec payload',
+            onPressed: () =>
+                _afficherNotification(titre: 'Titre simple', corps: 'Contenu simple'),
           ),
           PaddedElevatedButton(
-            buttonText: 'Show plain notification that has no title with payload',
-            onPressed: () => _showNotification(body: 'plain body'),
+            buttonText: 'Afficher une notification sans titre',
+            onPressed: () => _afficherNotification(corps: 'Contenu simple'),
           ),
           PaddedElevatedButton(
-            buttonText: 'Show plain notification that has no body with payload',
-            onPressed: () => _showNotification(title: 'plain title'),
+            buttonText: 'Afficher une notification sans contenu',
+            onPressed: () => _afficherNotification(titre: 'Titre simple'),
           ),
           PaddedElevatedButton(
-            buttonText: 'Show notification from silent channel',
-            onPressed: () => _showNotification(title: 'Silent', body: 'Shhh', playSound: false),
+            buttonText: 'Notification silencieuse (aucun son)',
+            onPressed: () =>
+                _afficherNotification(titre: 'Silencieuse', corps: 'Chut', playSound: false),
           ),
           PaddedElevatedButton(
-            buttonText: 'Show silent notification from channel with sound',
-            onPressed: () => _showNotification(title: 'Shh', body: 'Silent', silent: true),
+            buttonText: 'Notification silencieuse (canal avec son activé)',
+            onPressed: () =>
+                _afficherNotification(titre: 'Shh', corps: 'Silencieux', silent: true),
           ),
           PaddedElevatedButton(
-            buttonText: 'Cancel latest notification',
-            onPressed: _cancelNotification,
+            buttonText: 'Annuler la dernière notification',
+            onPressed: _annulerNotification,
           ),
           PaddedElevatedButton(
-            buttonText: 'Cancel all notification',
-            onPressed: _cancelAllNotifications,
+            buttonText: 'Annuler toutes les notifications',
+            onPressed: _annulerToutesNotifications,
           ),
         ],
       ),
     ),
   );
 
-  List<Widget> _buildLaunchDetails() {
-    final response = widget.notificationAppLaunchDetails!.notificationResponse;
-    return [
-      const Text('Launch notification details'),
-      _InfoValueString(title: 'Notification id', value: response?.id),
-      _InfoValueString(title: 'Action id', value: response?.actionId),
-      _InfoValueString(title: 'Input', value: response?.input),
-      _InfoValueString(title: 'Payload:', value: response?.payload),
-    ];
-  }
-
-  Future<void> _showNotification({
-    String? title,
-    String? body,
+  Future<void> _afficherNotification({
+    String? titre,
+    String? corps,
     bool playSound = true,
     bool silent = false,
   }) async {
     final androidDetails = AndroidNotificationDetails(
-      'your channel id',
-      'your channel name',
-      channelDescription: 'your channel description',
+      'canal_id',
+      'canal_nom',
+      channelDescription: 'Description du canal',
       importance: Importance.max,
       priority: Priority.high,
       ticker: 'ticker',
@@ -202,27 +173,27 @@ class HomePageState extends State<HomePage> {
       silent: silent,
     );
 
-    final iOSDetails = DarwinNotificationDetails(presentSound: playSound);
+    final iosDetails = DarwinNotificationDetails(presentSound: playSound);
 
     final details = NotificationDetails(
       android: androidDetails,
-      iOS: iOSDetails,
+      iOS: iosDetails,
     );
 
     await flutterLocalNotificationsPlugin.show(
       _id++,
-      title,
-      body,
+      titre,
+      corps,
       details,
       payload: 'item x',
     );
   }
 
-  Future<void> _cancelNotification() async {
+  Future<void> _annulerNotification() async {
     await flutterLocalNotificationsPlugin.cancel(--_id);
   }
 
-  Future<void> _cancelAllNotifications() async {
+  Future<void> _annulerToutesNotifications() async {
     await flutterLocalNotificationsPlugin.cancelAll();
   }
 }
@@ -237,40 +208,17 @@ class SecondPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Second Screen')),
+    appBar: AppBar(title: const Text('Deuxième Écran')),
     body: Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('payload ${payload ?? ''}'),
-          Text('data ${data ?? ''}'),
+          Text('Payload : ${payload ?? ''}'),
+          Text('Données : ${data ?? ''}'),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Go back!'),
+            child: const Text('Retour'),
           ),
-        ],
-      ),
-    ),
-  );
-}
-
-class _InfoValueString extends StatelessWidget {
-  const _InfoValueString({required this.title, required this.value});
-
-  final String title;
-  final Object? value;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(
-            text: '$title ',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          TextSpan(text: '$value'),
         ],
       ),
     ),
