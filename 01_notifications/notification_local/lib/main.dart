@@ -98,7 +98,6 @@ class HomePageState extends State<HomePage> {
   }
 
   void _gererNotification(NotificationResponse? response) {
-    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => SecondPage(response?.payload, data: response?.data),
