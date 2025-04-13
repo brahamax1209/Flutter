@@ -91,7 +91,7 @@ class HomePageState extends State<HomePage> {
   void _gererNotification(NotificationResponse? response) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => SecondPage(response?.payload, data: response?.data),
+        builder: (_) => SecondPage(response?.payload),
       ),
     );
   }
@@ -111,10 +111,11 @@ class HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           PaddedElevatedButton(
-            buttonText: 'Afficher une notification avec payload',
+            buttonText: 'Afficher une notification',
             onPressed: () =>
                 _afficherNotification(titre: 'Titre simple', corps: 'Contenu simple'),
           ),
+
           PaddedElevatedButton(
             buttonText: 'Afficher une notification sans titre',
             onPressed: () => _afficherNotification(corps: 'Contenu simple'),
@@ -171,7 +172,7 @@ class HomePageState extends State<HomePage> {
       titre,
       corps,
       details,
-      payload: 'item x',
+      payload: 'Article12345',
     );
   }
 
@@ -182,12 +183,11 @@ class HomePageState extends State<HomePage> {
 }
 
 class SecondPage extends StatelessWidget {
-  const SecondPage(this.payload, {this.data, super.key});
+  const SecondPage(this.payload, {super.key});
 
   static const String routeName = '/secondPage';
 
   final String? payload;
-  final Map<String, dynamic>? data;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -197,7 +197,6 @@ class SecondPage extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('Payload : ${payload ?? ''}'),
-          Text('Données : ${data ?? ''}'),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Retour'),
