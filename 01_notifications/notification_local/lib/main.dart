@@ -2,13 +2,15 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'padded_button.dart';
-import 'plugin.dart';
 
 final StreamController<NotificationResponse> selectNotificationStream =
 StreamController<NotificationResponse>.broadcast();
 
 String? selectedNotificationPayload;
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+FlutterLocalNotificationsPlugin();
+
 int _id = 0;
 
 Future<void> main() async {
@@ -64,19 +66,8 @@ class HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _verifierPermissionAndroid();
     _demanderPermissions();
     _ecouterNotification();
-  }
-
-  Future<void> _verifierPermissionAndroid() async {
-    if (Platform.isAndroid) {
-      await flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-          ?.areNotificationsEnabled() ??
-          false;
-    }
   }
 
   Future<void> _demanderPermissions() async {
@@ -143,10 +134,6 @@ class HomePageState extends State<HomePage> {
                 _afficherNotification(titre: 'Shh', corps: 'Silencieux', silent: true),
           ),
           PaddedElevatedButton(
-            buttonText: 'Annuler la dernière notification',
-            onPressed: _annulerNotification,
-          ),
-          PaddedElevatedButton(
             buttonText: 'Annuler toutes les notifications',
             onPressed: _annulerToutesNotifications,
           ),
@@ -188,9 +175,6 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _annulerNotification() async {
-    await flutterLocalNotificationsPlugin.cancel(--_id);
-  }
 
   Future<void> _annulerToutesNotifications() async {
     await flutterLocalNotificationsPlugin.cancelAll();
@@ -220,6 +204,26 @@ class SecondPage extends StatelessWidget {
           ),
         ],
       ),
+    ),
+  );
+}
+
+class PaddedElevatedButton extends StatelessWidget {
+  const PaddedElevatedButton({
+    required this.buttonText,
+    required this.onPressed,
+    super.key,
+  });
+
+  final String buttonText;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+    child: ElevatedButton(
+      onPressed: onPressed,
+      child: Text(buttonText),
     ),
   );
 }
